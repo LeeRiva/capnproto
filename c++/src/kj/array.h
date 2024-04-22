@@ -908,6 +908,12 @@ Array<T> ArrayPtr<T>::attach(Attachments&&... attachments) const {
   return Array<T>(ptrCopy, size_, *bundle);
 }
 
+template<typename T, typename = EnableIf<KJ_HAS_TRIVIAL_CONSTRUCTOR(T)>>
+inline void zero(Array<T>& t) {
+  // Zero-initialize memory region belonging to t. Type-safe wrapper around `memset`.
+  memset(t.begin(), 0, t.asBytes().size());
+}
+
 }  // namespace kj
 
 KJ_END_HEADER

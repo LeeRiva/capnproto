@@ -20,6 +20,7 @@
 // THE SOFTWARE.
 
 #include "common.h"
+#include "kj/array.h"
 #include "test.h"
 #include <inttypes.h>
 #include <kj/compat/gtest.h>
@@ -967,6 +968,43 @@ static_assert(_::isDisallowedInCoroutine<DisallowedInCoroutinePrivate*>());
 static_assert(!_::isDisallowedInCoroutine<AllowedInCoroutine>());
 static_assert(!_::isDisallowedInCoroutine<AllowedInCoroutine&>());
 static_assert(!_::isDisallowedInCoroutine<AllowedInCoroutine*>());
+
+KJ_TEST("zero<T>()") {
+  // zero() works for primitive types
+  int64_t x = 42;
+  zero(x);
+  KJ_EXPECT(x == 0);
+
+  // zero() works for trivially constructible types
+  struct ZeroTest {
+    int64_t x;
+    double pi;
+  };
+  ZeroTest t1;
+    
+  zero(t1);
+  KJ_EXPECT(t1.x == 0);
+  KJ_EXPECT(t1.pi == 0.0);
+
+  // zero works on statically-sized arrays too
+  ZeroTest arr[256];
+  memset(arr, 0xff, 256 * sizeof(ZeroTest));
+  zero(arr);
+  for (auto& t: arr) {
+    KJ_EXPECT(t.pi == 0);
+  }
+
+  Array<int64_t> arr2 = kj::heapArray<int64_t>(1024);
+  KJ_EXPECT(arr2.size() == 1024);
+  for (auto& x: arr2) {
+    x = 42;
+  }
+  zero(arr2);
+  KJ_EXPECT(arr2.size() == 1024);
+  for (auto& x: arr2) {
+    KJ_EXPECT(x == 0);
+  }
+}
 
 }  // namespace
 }  // namespace kj
